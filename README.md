@@ -1,3 +1,2 @@
-# golang
-并发聊天室
+# golang并发聊天室
 (client.go可用netcat替代)
