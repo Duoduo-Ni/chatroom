@@ -76,7 +76,8 @@ func HandleConn(conn net.Conn) { //处理用户链接
 				fmt.Println("conn.Read err=", err)
 				return
 			}
-			msg := string(buf[:n-1])           //通过windows nc测试，多一个换行
+			//msg := string(buf[:n-1])           //通过windows nc测试，多一个换行
+			msg := string(buf[:n-2])           //client.go 测试  发送时，多了两个字符"\n"
 			if len(msg) == 3 && msg == "who" { //查看当前用户列表
 				//遍历map，给当前用户发送所有成员
 				conn.Write([]byte("user list:\n"))
@@ -120,7 +121,9 @@ func HandleConn(conn net.Conn) { //处理用户链接
 
 func main() {
 	//监听
-	listener, err := net.Listen("tcp", ":8000")
+	//listener, err := net.Listen("tcp", ":8000") //用netcat或用client.go
+	//nc 127.0.0.1 8000  或 go run client.go
+	listener, err := net.Listen("tcp", "127.0.0.1:8000") //用netcat或用client.go
 	if err != nil {
 		fmt.Println("net.Listen err=", err)
 		return
@@ -131,14 +134,14 @@ func main() {
 	//新开一个协程，转发消息，只要有消息来了，遍历map，给map每个成员都发送此消息
 	go Manager()
 
-	//主协程，循环阻塞等待用户链接
+	//主协程，循环阻塞等待用户链接，接收多个用户
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
 			fmt.Println("listener.Accept err =", err)
 			continue
 		}
-		go HandleConn(conn) //处理用户链接
+		go HandleConn(conn) //处理用户链接，处理用户请求，新建一个协程，每来一个，开一个服务
 	}
 
 }
